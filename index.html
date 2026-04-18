@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="選擇">
+<title>選擇 · My Choices</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=DM+Serif+Display:ital@0;1&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f0f0e;
+  --bg2: #161614;
+  --text: #e4e0d8;
+  --muted: #5e5c58;
+  --hint: #323230;
+  --border: #242420;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Serif TC', serif;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app { width: 100%; height: 100vh; position: relative; }
+
+/* ────────────────────────────────
+   SPLASH SCREEN
+──────────────────────────────── */
+#splash {
+  position: absolute; inset: 0;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 0; z-index: 200;
+  padding: 2rem;
+}
+
+#splash.out {
+  animation: splashOut 0.8s ease forwards;
+}
+
+@keyframes splashOut {
+  to { opacity: 0; pointer-events: none; }
+}
+
+.brand-logo {
+  opacity: 0;
+  animation: fadeUp 1s ease 0.3s forwards;
+}
+
+.brand-name {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 0.35em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-top: 1.5rem;
+  opacity: 0;
+  animation: fadeUp 1s ease 0.7s forwards;
+}
+
+.brand-slogan {
+  font-family: 'DM Serif Display', serif;
+  font-style: italic;
+  font-size: clamp(13px, 3.5vw, 16px);
+  color: var(--hint);
+  margin-top: 0.6rem;
+  letter-spacing: 0.04em;
+  opacity: 0;
+  animation: fadeUp 1s ease 1s forwards;
+}
+
+.splash-tap {
+  position: absolute;
+  bottom: 3rem;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--hint);
+  text-transform: uppercase;
+  opacity: 0;
+  animation: fadeUp 1s ease 1.6s forwards, pulse 2.5s ease 2.6s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+/* ────────────────────────────────
+   NAMING SCREEN
+──────────────────────────────── */
+#naming-screen {
+  position: absolute; inset: 0;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 100; padding: 2rem;
+  gap: 0;
+}
+
+#naming-screen.hidden { display: none; }
+
+.naming-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--hint);
+  font-family: 'DM Serif Display', serif;
+  font-style: italic;
+  margin-bottom: 2.5rem;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.2s forwards;
+}
+
+.naming-cards-wrap {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 0 12px;
+  flex: 1;
+  max-height: 60vh;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.4s forwards;
+}
+
+.naming-question {
+  font-size: 14px;
+  color: var(--muted);
+  text-align: center;
+  margin-bottom: 1.25rem;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.3s forwards;
+}
+
+/* name reveal */
+.reveal-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+}
+
+.reveal-line {
+  font-size: clamp(14px, 3.5vw, 17px);
+  color: var(--muted);
+  text-align: center;
+  line-height: 2.4;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.9s ease, transform 0.9s ease;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+}
+
+.reveal-line.show { opacity: 1; transform: translateY(0); }
+
+.reveal-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(38px, 11vw, 60px);
+  color: var(--text);
+  text-align: center;
+  line-height: 1.15;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 1.1s ease, transform 1.1s ease;
+  margin: 0.5rem 0;
+}
+
+.reveal-name.show { opacity: 1; transform: translateY(0); }
+
+.reveal-actions {
+  display: flex; gap: 10px;
+  margin-top: 2.5rem;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+
+.reveal-actions.show { opacity: 1; }
+
+.reveal-btn {
+  background: transparent;
+  border: 0.5px solid var(--border);
+  color: var(--muted);
+  font-family: 'Noto Serif TC', serif;
+  font-size: 13px;
+  padding: 11px 28px;
+  border-radius: 40px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.06em;
+}
+
+.reveal-btn:hover { border-color: var(--muted); color: var(--text); }
+.reveal-btn.primary { border-color: #3a3835; color: var(--text); }
+
+/* ────────────────────────────────
+   QUESTION SCREEN
+──────────────────────────────── */
+#question-screen {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+}
+
+#question-screen.hidden { display: none; }
+
+.top-bar {
+  padding: 3.5rem 1.5rem 1.25rem;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 0.7rem;
+  flex-shrink: 0;
+}
+
+.q-eyebrow {
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--hint);
+  font-family: 'DM Serif Display', serif;
+  font-style: italic;
+}
+
+.q-text {
+  font-size: clamp(15px, 4vw, 19px);
+  color: #888580;
+  text-align: center;
+  line-height: 1.75;
+  font-weight: 300;
+  padding: 0 1.5rem;
+  letter-spacing: 0.02em;
+}
+
+/* ────────────────────────────────
+   CARDS
+──────────────────────────────── */
+.cards-area {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 0 12px;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.card {
+  border-radius: 22px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.4rem 1.2rem 1.6rem;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease, border-color 0.2s;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid transparent;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 0;
+}
+
+.card:active { transform: scale(0.96) !important; }
+.card.chosen { transform: translateY(-10px); }
+.card.unchosen { opacity: 0.15; }
+
+.card-num {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  opacity: 0.3;
+  font-family: 'DM Serif Display', serif;
+  font-style: italic;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.card-symbol {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -55%);
+  opacity: 0.06;
+  width: 62%; height: 62%;
+  pointer-events: none;
+}
+
+.card-symbol svg { width: 100%; height: 100%; }
+
+.card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  align-self: flex-end;
+  width: 100%;
+}
+
+.card-word {
+  font-family: 'Noto Serif TC', serif;
+  font-weight: 500;
+  font-size: clamp(26px, 7.5vw, 44px);
+  line-height: 1.18;
+  letter-spacing: 0.02em;
+}
+
+.card-sub {
+  font-family: 'Noto Serif TC', serif;
+  font-size: clamp(11px, 2.6vw, 13px);
+  opacity: 0.4;
+  line-height: 1.6;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+}
+
+/* card palettes */
+.c-night  { background:#0c0c0a; border-color:#252420; color:#dedad0; }
+.c-chalk  { background:#efece3; border-color:#c8c4b8; color:#181610; }
+.c-ink    { background:#080f1e; border-color:#0e1e36; color:#90bce8; }
+.c-sand   { background:#efe0c0; border-color:#d0c098; color:#221404; }
+.c-void   { background:#0c0618; border-color:#180e28; color:#b8b0f0; }
+.c-moss   { background:#091608; border-color:#142412; color:#90c464; }
+.c-ash    { background:#141412; border-color:#222220; color:#c8c4bc; }
+.c-ember  { background:#180806; border-color:#2c100c; color:#ec9868; }
+.c-fog    { background:#10101a; border-color:#1a1a26; color:#a4a4c0; }
+.c-dawn   { background:#180e04; border-color:#281808; color:#ecc070; }
+
+/* chosen border accent */
+.c-night.chosen  { border-color:#404038; }
+.c-chalk.chosen  { border-color:#a0a090; }
+.c-ink.chosen    { border-color:#1e3a60; }
+.c-sand.chosen   { border-color:#b09060; }
+.c-void.chosen   { border-color:#2a1a50; }
+.c-moss.chosen   { border-color:#1e3e18; }
+.c-ash.chosen    { border-color:#383834; }
+.c-ember.chosen  { border-color:#4a1a10; }
+.c-fog.chosen    { border-color:#282838; }
+.c-dawn.chosen   { border-color:#402010; }
+
+/* ────────────────────────────────
+   BOTTOM
+──────────────────────────────── */
+.bottom-area {
+  padding: 0.85rem 1.5rem 2.2rem;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.memory-strip {
+  display: flex; gap: 5px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 0 0.5rem;
+  min-height: 20px;
+}
+
+.mem-chip {
+  font-size: 10px;
+  padding: 2px 9px;
+  border-radius: 20px;
+  background: #1a1a18;
+  color: #444;
+  border: 0.5px solid #262624;
+  animation: chipIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  letter-spacing: 0.04em;
+  font-family: 'Noto Serif TC', serif;
+}
+
+@keyframes chipIn {
+  from { opacity: 0; transform: scale(0.75); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.next-btn {
+  background: transparent;
+  border: 0.5px solid var(--border);
+  color: var(--muted);
+  font-family: 'Noto Serif TC', serif;
+  font-size: 13px;
+  padding: 10px 36px;
+  border-radius: 40px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.08em;
+  display: none;
+  margin-top: 0.3rem;
+}
+
+.next-btn.show { display: block; }
+.next-btn:hover { border-color: var(--muted); color: var(--text); }
+
+.skip-btn {
+  background: transparent;
+  border: none;
+  color: var(--hint);
+  font-family: 'Noto Serif TC', serif;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 7px 20px;
+  letter-spacing: 0.06em;
+  transition: color 0.2s;
+  margin-top: 0.2rem;
+}
+
+.skip-btn:hover { color: var(--muted); }
+
+.count-line {
+  font-size: 9px;
+  color: var(--hint);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-top: 0.2rem;
+}
+
+/* ────────────────────────────────
+   TRANSITIONS
+──────────────────────────────── */
+.fade-in { animation: fadeUp 0.45s ease forwards; }
+.fade-out { animation: fadeDown 0.28s ease forwards; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeDown {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-10px); }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- SPLASH -->
+<div id="splash" onclick="dismissSplash()">
+  <div class="brand-logo">
+    <svg width="48" height="58" viewBox="0 0 48 58" fill="none">
+      <circle cx="24" cy="10" r="6" fill="#e4e0d8"/>
+      <line x1="24" y1="16" x2="12" y2="40" stroke="#3a3835" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="24" y1="16" x2="36" y2="40" stroke="#3a3835" stroke-width="1.2" stroke-linecap="round"/>
+      <circle cx="12" cy="47" r="5" fill="none" stroke="#4a4845" stroke-width="1.2"/>
+      <circle cx="36" cy="47" r="5" fill="none" stroke="#4a4845" stroke-width="1.2"/>
+    </svg>
+  </div>
+  <div class="brand-name">My Choices · 選擇</div>
+  <div class="brand-slogan">每一個選擇，都是你。</div>
+  <div class="splash-tap">輕觸開始</div>
+</div>
+
+<!-- NAMING -->
+<div id="naming-screen" class="hidden"></div>
+
+<!-- QUESTION -->
+<div id="question-screen" class="hidden">
+  <div class="top-bar">
+    <div class="q-eyebrow" id="q-eyebrow">選擇 問你</div>
+    <div class="q-text" id="q-text"></div>
+  </div>
+  <div class="cards-area" id="cards-area"></div>
+  <div class="bottom-area">
+    <div class="memory-strip" id="memory-strip"></div>
+    <button class="next-btn" id="next-btn" onclick="nextQuestion()">繼續</button>
+    <button class="skip-btn" id="skip-btn" onclick="skipQuestion()"></button>
+    <div class="count-line" id="count-line"></div>
+  </div>
+</div>
+
+</div>
+<script>
+// ── SYMBOLS ──
+const SYM = {
+  'c-night': `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.8">
+    <circle cx="50" cy="50" r="28"/>
+    <line x1="50" y1="8" x2="50" y2="18"/><line x1="50" y1="82" x2="50" y2="92"/>
+    <line x1="8" y1="50" x2="18" y2="50"/><line x1="82" y1="50" x2="92" y2="50"/>
+    <line x1="22" y1="22" x2="29" y2="29"/><line x1="71" y1="71" x2="78" y2="78"/>
+    <line x1="78" y1="22" x2="71" y2="29"/><line x1="29" y1="71" x2="22" y2="78"/>
+  </svg>`,
+  'c-chalk': `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.8">
+    <circle cx="50" cy="36" r="18"/>
+    <line x1="50" y1="54" x2="50" y2="78"/>
+    <line x1="36" y1="78" x2="64" y2="78"/>
+  </svg>`,
+  'c-ink': `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.8">
+    <path d="M50 12 Q82 50 50 88 Q18 50 50 12Z"/>
+    <path d="M50 26 Q68 50 50 74 Q32 50 50 26Z" opacity="0.5"/>
+    <circle cx="50" cy="68" r="4" fill="currentColor" opacity="0.3"/>
+  </svg>`,
+  'c-sand': `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.8">
+    <polygon points="50,12 88,82 12,82"/>
+    <polygon points="50,28 72,76 28,76" opacity="0.55"/>
+    <polygon points="50,46 62,72 38,72" opacity="0.3"/>
+  </svg>`,
+  'c-void': `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.8">
+    <circle cx="50" cy="50" r="36"/>
+    <circle cx="50" cy="50" r="24"/>
+    <circle cx="50" cy="50" r="12"/>
+    <circle cx="50" cy="50" r="3" fill="currentColor" opacity="0.5"/>
+  </svg>`,
+  'c-moss': `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.8">
+    <line x1="50" y1="88" x2="50" y2="52"/>
+    <path d="M50 52 Q28 36 18 18"/><path d="M50 52 Q72 36 82 18"/>
+    <path d="M50 68 Q34 58 22 46"/><path d="M50 68 Q66 58 78 46"/>
+    <path d="M50 80 Q40 74 32 66"/><path d="M50 80 Q60 74 68 66"/>
+  </svg>`,
+  'c-ash': `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.8">
+    <rect x="18" y="18" width="64" height="64"/>
+    <rect x="29" y="29" width="42" height="42" opacity="0.6"/>
+    <rect x="40" y="40" width="20" height="20" opacity="0.35"/>
+    <line x1="18" y1="18" x2="82" y2="82" opacity="0.2"/>
+    <line x1="82" y1="18" x2="18" y2="82" opacity="0.2"/>
+  </svg>`,
+  'c-ember': `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.8">
+    <path d="M50 88 Q28 68 32 46 Q36 28 50 16 Q54 34 48 46 Q62 34 66 16 Q78 38 72 56 Q68 72 50 88Z"/>
+    <path d="M50 76 Q38 62 40 50 Q43 40 50 34 Q52 42 49 50 Q56 42 58 34 Q66 48 62 58 Q59 68 50 76Z" opacity="0.35"/>
+  </svg>`,
+  'c-fog': `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.8">
+    <path d="M12 38 Q50 22 88 38" opacity="0.9"/>
+    <path d="M12 50 Q50 34 88 50" opacity="0.7"/>
+    <path d="M12 62 Q50 46 88 62" opacity="0.5"/>
+    <path d="M12 74 Q50 58 88 74" opacity="0.3"/>
+  </svg>`,
+  'c-dawn': `<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="0.8">
+    <path d="M12 68 Q50 28 88 68"/>
+    <line x1="50" y1="12" x2="50" y2="28"/>
+    <line x1="18" y1="24" x2="28" y2="34"/><line x1="82" y1="24" x2="72" y2="34"/>
+    <line x1="8" y1="52" x2="20" y2="52"/><line x1="92" y1="52" x2="80" y2="52"/>
+    <line x1="26" y1="14" x2="30" y2="24" opacity="0.5"/><line x1="74" y1="14" x2="70" y2="24" opacity="0.5"/>
+  </svg>`,
+};
+
+// ── NAMING QUESTIONS ──
+const NQ = [
+  { q:'你比較像哪個？', a:{zh:'深夜',sub:''}, b:{zh:'清晨',sub:''}, ca:'c-night', cb:'c-chalk' },
+  { q:'你比較像哪個？', a:{zh:'海',sub:''}, b:{zh:'山',sub:''}, ca:'c-ink', cb:'c-sand' },
+  { q:'你比較像哪個？', a:{zh:'說出口的話',sub:''}, b:{zh:'沒說出口的話',sub:''}, ca:'c-void', cb:'c-moss' },
+  { q:'你比較像哪個？', a:{zh:'先做再說',sub:''}, b:{zh:'想清楚再動',sub:''}, ca:'c-ember', cb:'c-ash' },
+  { q:'你比較像哪個？', a:{zh:'火',sub:''}, b:{zh:'水',sub:''}, ca:'c-dawn', cb:'c-fog' },
+];
+
+// ── NAMES ──
+const NAMES = {
+  'aabba':'深水裡的人','aabab':'霧裡的人','aabbb':'霧裡的人',
+  'aaabb':'深水裡的人','aaaab':'深水裡的人','aaaaa':'悶燒的人',
+  'aabaa':'悶燒的人','abaab':'夜裡的浪','ababa':'安靜的火',
+  'ababb':'沉默的光','abbab':'深夜的山','abbba':'悶燒的人',
+  'abbbb':'深夜的山','abaaa':'安靜的火','baaab':'浪裡來的人',
+  'baaba':'燒不完的人','baabb':'浪裡來的人','babaa':'走在霧前面的人',
+  'babab':'走在霧前面的人','babba':'沉默的光','babbb':'向陽的石頭',
+  'baaaa':'燒不完的人','bbaab':'早起的光','bbaba':'早起的光',
+  'bbabb':'向陽的石頭','bbbab':'向陽的石頭','bbbba':'早起的光',
+  'bbbbb':'向陽的石頭','bbaaa':'早起的光','bbbaa':'向陽的石頭',
+  'bbbab':'向陽的石頭','bbaab':'早起的光',
+};
+
+// ── DAILY QUESTIONS ──
+const DQ = [
+  { q:'洗澡，你先洗頭還是先洗身體？', a:{zh:'先洗頭',sub:''}, b:{zh:'先洗身體',sub:''}, ca:'c-fog', cb:'c-ash', t:'fun' },
+  { q:'手機快沒電了，你是？', a:{zh:'馬上找充電器',sub:''}, b:{zh:'再撐一下',sub:''}, ca:'c-void', cb:'c-ember', t:'fun' },
+  { q:'如果你吃香腸，你是直著吃還是橫著咬？', a:{zh:'直著吃',sub:''}, b:{zh:'橫著咬',sub:''}, ca:'c-sand', cb:'c-dawn', t:'fun' },
+  { q:'睡覺，腳是？', a:{zh:'在被子裡',sub:''}, b:{zh:'踢出來',sub:''}, ca:'c-night', cb:'c-chalk', t:'fun' },
+  { q:'你上廁所是站著還是坐著？', a:{zh:'站著',sub:''}, b:{zh:'坐著',sub:''}, ca:'c-ash', cb:'c-moss', t:'fun' },
+  { q:'你比較像哪個？', a:{zh:'WiFi',sub:'到處都連得到'}, b:{zh:'藍牙',sub:'近一點才行'}, ca:'c-ink', cb:'c-fog', t:'fun' },
+  { q:'你比較像哪個？', a:{zh:'充電20%就出門',sub:'夠用就好'}, b:{zh:'等到100%再走',sub:'不然不安心'}, ca:'c-ember', cb:'c-moss', t:'fun' },
+  { q:'你比較像哪個？', a:{zh:'可樂',sub:''}, b:{zh:'雪碧',sub:''}, ca:'c-night', cb:'c-chalk', t:'fun' },
+  { q:'你比較像哪個？', a:{zh:'窗邊',sub:'看風景'}, b:{zh:'走道',sub:'方便走動'}, ca:'c-ink', cb:'c-sand', t:'fun' },
+  { q:'你比較像哪個？', a:{zh:'鍵盤上的空白鍵',sub:''}, b:{zh:'Enter',sub:''}, ca:'c-ash', cb:'c-void', t:'fun' },
+  { q:'你比較像哪個？', a:{zh:'還在等一件事的人',sub:''}, b:{zh:'已經不等了的人',sub:''}, ca:'c-fog', cb:'c-ember', t:'deep' },
+  { q:'你比較像哪個？', a:{zh:'留下來的人',sub:''}, b:{zh:'離開的人',sub:''}, ca:'c-night', cb:'c-dawn', t:'deep' },
+  { q:'你比較像哪個？', a:{zh:'還記得的夢',sub:''}, b:{zh:'醒來就忘的夢',sub:''}, ca:'c-void', cb:'c-chalk', t:'deep' },
+  { q:'你比較像哪個？', a:{zh:'回頭看的人',sub:''}, b:{zh:'走了就走了',sub:''}, ca:'c-fog', cb:'c-ember', t:'deep' },
+  { q:'你比較像哪個？', a:{zh:'在等人的人',sub:''}, b:{zh:'被等的人',sub:''}, ca:'c-ink', cb:'c-sand', t:'deep' },
+  { q:'你比較像哪個？', a:{zh:'地圖',sub:'知道每條路'}, b:{zh:'指南針',sub:'只知道方向'}, ca:'c-ash', cb:'c-moss', t:'normal' },
+  { q:'你比較像哪個？', a:{zh:'第一頁',sub:''}, b:{zh:'最後一頁',sub:''}, ca:'c-night', cb:'c-dawn', t:'normal' },
+  { q:'你比較像哪個？', a:{zh:'說話最多的那個',sub:'人群裡'}, b:{zh:'安靜聽著的那個',sub:'人群裡'}, ca:'c-ember', cb:'c-fog', t:'normal' },
+  { q:'你比較像哪個？', a:{zh:'IKEA',sub:'自己組裝的感覺'}, b:{zh:'無印良品',sub:'安靜就好'}, ca:'c-chalk', cb:'c-ash', t:'fun' },
+  { q:'你比較像哪個？', a:{zh:'計畫好的旅行',sub:''}, b:{zh:'說走就走',sub:''}, ca:'c-ink', cb:'c-dawn', t:'normal' },
+  { q:'你比較像哪個？', a:{zh:'貓',sub:''}, b:{zh:'狗',sub:''}, ca:'c-night', cb:'c-sand', t:'fun' },
+  { q:'你比較像哪個？', a:{zh:'喜歡下雨天',sub:''}, b:{zh:'喜歡晴天',sub:''}, ca:'c-fog', cb:'c-dawn', t:'normal' },
+  { q:'你比較像哪個？', a:{zh:'早餐',sub:'一天最重要的一餐'}, b:{zh:'消夜',sub:'一天最快樂的時候'}, ca:'c-chalk', cb:'c-night', t:'fun' },
+  { q:'你比較像哪個？', a:{zh:'找到的感覺',sub:''}, b:{zh:'尋找的過程',sub:''}, ca:'c-moss', cb:'c-fog', t:'deep' },
+  { q:'你比較像哪個？', a:{zh:'說「我愛你」很容易',sub:''}, b:{zh:'說「我愛你」很難',sub:''}, ca:'c-ember', cb:'c-void', t:'deep' },
+  { q:'你比較像哪個？', a:{zh:'全速前進的人',sub:''}, b:{zh:'慢慢來的人',sub:''}, ca:'c-dawn', cb:'c-fog', t:'normal' },
+  { q:'你比較像哪個？', a:{zh:'開著燈睡覺',sub:''}, b:{zh:'一定要全黑',sub:''}, ca:'c-chalk', cb:'c-night', t:'fun' },
+  { q:'你比較像哪個？', a:{zh:'喜歡驚喜',sub:''}, b:{zh:'不喜歡驚喜',sub:''}, ca:'c-ember', cb:'c-ash', t:'normal' },
+  { q:'你比較像哪個？', a:{zh:'刪掉讀過的訊息',sub:''}, b:{zh:'全部留著',sub:''}, ca:'c-night', cb:'c-ink', t:'fun' },
+  { q:'你比較像哪個？', a:{zh:'有祕密的人',sub:''}, b:{zh:'沒什麼祕密',sub:''}, ca:'c-void', cb:'c-chalk', t:'deep' },
+  { q:'你比較像哪個？', a:{zh:'喜歡安靜的空間',sub:''}, b:{zh:'喜歡有聲音的地方',sub:''}, ca:'c-fog', cb:'c-dawn', t:'normal' },
+  { q:'你比較像哪個？', a:{zh:'先看結局',sub:'再回來看過程'}, b:{zh:'絕對不能劇透',sub:''}, ca:'c-ember', cb:'c-moss', t:'fun' },
+  { q:'你比較像哪個？', a:{zh:'一個人吃飯沒問題',sub:''}, b:{zh:'一個人吃飯有點難',sub:''}, ca:'c-ash', cb:'c-sand', t:'normal' },
+  { q:'你比較像哪個？', a:{zh:'記得夢的人',sub:''}, b:{zh:'從不記得夢',sub:''}, ca:'c-void', cb:'c-chalk', t:'normal' },
+  { q:'你比較像哪個？', a:{zh:'今年的你',sub:''}, b:{zh:'三年前的你',sub:''}, ca:'c-dawn', cb:'c-fog', t:'deep' },
+  { q:'你比較像哪個？', a:{zh:'星期一',sub:''}, b:{zh:'星期五',sub:''}, ca:'c-night', cb:'c-ember', t:'fun' },
+  { q:'你比較像哪個？', a:{zh:'容易哭的人',sub:''}, b:{zh:'很少哭的人',sub:''}, ca:'c-fog', cb:'c-ash', t:'deep' },
+  { q:'你比較像哪個？', a:{zh:'喜歡老東西',sub:'有歷史感的'}, b:{zh:'喜歡新的',sub:'乾淨沒用過的'}, ca:'c-dawn', cb:'c-chalk', t:'normal' },
+  { q:'你比較像哪個？', a:{zh:'心裡有很多話',sub:'說不完'}, b:{zh:'話不多',sub:'說完就沒了'}, ca:'c-void', cb:'c-sand', t:'normal' },
+  { q:'你比較像哪個？', a:{zh:'容易原諒人',sub:''}, b:{zh:'很難忘記',sub:''}, ca:'c-moss', cb:'c-ember', t:'deep' },
+  { q:'你比較像哪個？', a:{zh:'相信直覺',sub:''}, b:{zh:'相信分析',sub:''}, ca:'c-dawn', cb:'c-ink', t:'normal' },
+  { q:'你現在幸福嗎？', a:{zh:'算是',sub:''}, b:{zh:'還不確定',sub:''}, ca:'c-chalk', cb:'c-fog', t:'deep' },
+];
+
+// ── SKIP TEXTS ──
+const SKIP = {
+  fun:    ['關你屁事','不要不要','當我沒問','好啦好啦','這題不算','跳過跳過','哼'],
+  deep:   ['沒關係','留著','今天不說也好','我記得問過你','嗯','沉默也是答案','好'],
+  normal: ['這題先放著','下一個','不說也行','算了','好，跳','嗯哼'],
+  late:   ['又不想說？','你贏了','我知道，下一題','這題你也跳？','行吧'],
+};
+
+const LABELS_A = ['選擇 問你','選擇 想知道','選擇 好奇'];
+const LABELS_B = ['選擇 又問你','選擇 繼續問','選擇 還想知道'];
+const LABELS_C = ['選擇 記得你','選擇 想再問你','選擇'];
+
+// ── TIME QUESTIONS ──
+const TQ_NOON  = { q:'你吃了嗎？', a:{zh:'吃了',sub:''}, b:{zh:'還沒',sub:''}, ca:'c-sand', cb:'c-night', t:'fun' };
+const TQ_NIGHT = { q:'今天還好嗎？', a:{zh:'還行',sub:''}, b:{zh:'有點累',sub:''}, ca:'c-moss', cb:'c-fog', t:'deep' };
+const TQ_MORN  = { q:'今天你期待什麼？', a:{zh:'有一件事',sub:''}, b:{zh:'快點結束就好',sub:''}, ca:'c-dawn', cb:'c-ash', t:'normal' };
+
+// ── STATE ──
+let S = JSON.parse(localStorage.getItem('mc_v2') || 'null') || {
+  phase: 'naming', namingIdx: 0, namingAns: [],
+  name: '', answered: 0, skipped: 0,
+  choices: [], chips: [], pool: [], poolIdx: 0,
+};
+
+function save() { localStorage.setItem('mc_v2', JSON.stringify(S)); }
+function rand(a) { return a[Math.floor(Math.random() * a.length)]; }
+
+function getLabel() {
+  if (S.answered < 30) return rand(LABELS_A);
+  if (S.answered < 100) return rand(LABELS_B);
+  return rand(LABELS_C);
+}
+
+function getSkip(type) {
+  if (S.answered > 60 && Math.random() < 0.3) return rand(SKIP.late);
+  return rand(SKIP[type] || SKIP.normal);
+}
+
+function getName(ans) {
+  const key = ans.join('');
+  if (NAMES[key]) return NAMES[key];
+  return rand(Object.values(NAMES));
+}
+
+function shufflePool() {
+  S.pool = [...DQ].sort(() => Math.random() - 0.5);
+  S.poolIdx = 0;
+}
+
+function addChip(txt) {
+  S.chips.push(txt);
+  if (S.chips.length > 5) S.chips.shift();
+  renderChips();
+}
+
+function renderChips() {
+  const el = document.getElementById('memory-strip');
+  if (!el) return;
+  el.innerHTML = '';
+  S.chips.forEach(c => {
+    const s = document.createElement('span');
+    s.className = 'mem-chip';
+    s.textContent = c;
+    el.appendChild(s);
+  });
+}
+
+function makeCard(side, opt, colorClass, idx) {
+  const sym = SYM[colorClass] || '';
+  const d = document.createElement('div');
+  d.className = `card ${colorClass} fade-in`;
+  d.style.animationDelay = `${idx * 0.07}s`;
+  d.dataset.side = side;
+  d.innerHTML = `
+    <div class="card-num">0${idx + 1}</div>
+    <div class="card-symbol">${sym}</div>
+    <div class="card-content">
+      <div class="card-word">${opt.zh}</div>
+      ${opt.sub ? `<div class="card-sub">${opt.sub}</div>` : ''}
+    </div>`;
+  return d;
+}
+
+// ── SPLASH ──
+function dismissSplash() {
+  const sp = document.getElementById('splash');
+  sp.classList.add('out');
+  setTimeout(() => {
+    sp.style.display = 'none';
+    if (S.phase === 'naming') startNaming();
+    else startMain();
+  }, 800);
+}
+
+// auto-dismiss after 3s if user doesn't tap
+setTimeout(() => {
+  const sp = document.getElementById('splash');
+  if (sp && !sp.classList.contains('out')) dismissSplash();
+}, 3200);
+
+// ── NAMING ──
+function startNaming() {
+  document.getElementById('naming-screen').classList.remove('hidden');
+  document.getElementById('question-screen').classList.add('hidden');
+  renderNamingQ();
+}
+
+function renderNamingQ() {
+  const screen = document.getElementById('naming-screen');
+  screen.innerHTML = '';
+
+  if (S.namingIdx < NQ.length) {
+    const q = NQ[S.namingIdx];
+
+    const ey = document.createElement('div');
+    ey.className = 'naming-eyebrow';
+    ey.textContent = '選擇 想認識你';
+    screen.appendChild(ey);
+
+    const qt = document.createElement('div');
+    qt.className = 'naming-question';
+    qt.textContent = q.q;
+    screen.appendChild(qt);
+
+    const row = document.createElement('div');
+    row.className = 'naming-cards-wrap';
+
+    ['a','b'].forEach((side, i) => {
+      const card = makeCard(side, q[side], i === 0 ? q.ca : q.cb, i);
+      card.style.minHeight = '52vw';
+      card.onclick = () => { S.namingAns.push(side); S.namingIdx++; save(); renderNamingQ(); };
+      row.appendChild(card);
+    });
+
+    screen.appendChild(row);
+
+  } else {
+    revealName();
+  }
+}
+
+function revealName() {
+  S.name = getName(S.namingAns);
+  save();
+
+  const screen = document.getElementById('naming-screen');
+  screen.innerHTML = `
+    <div class="reveal-wrap">
+      <div class="reveal-line" id="rl1">我想了一下。</div>
+      <div class="reveal-name" id="rname">${S.name}</div>
+      <div class="reveal-line" id="rl2">可以這樣叫你嗎？</div>
+      <div class="reveal-actions" id="ract">
+        <button class="reveal-btn" onclick="rejectName()">再想想</button>
+        <button class="reveal-btn primary" onclick="acceptName()">可以</button>
+      </div>
+    </div>`;
+
+  setTimeout(() => { document.getElementById('rl1').classList.add('show'); }, 300);
+  setTimeout(() => { document.getElementById('rname').classList.add('show'); }, 950);
+  setTimeout(() => { document.getElementById('rl2').classList.add('show'); }, 1550);
+  setTimeout(() => { document.getElementById('ract').classList.add('show'); }, 2150);
+}
+
+function acceptName() {
+  S.phase = 'main'; save(); startMain();
+}
+
+function rejectName() {
+  const keys = Object.values(NAMES).filter(n => n !== S.name);
+  S.name = rand(keys);
+  save();
+
+  const screen = document.getElementById('naming-screen');
+  screen.innerHTML = `
+    <div class="reveal-wrap">
+      <div class="reveal-line" id="rl1">好，再想想。</div>
+      <div class="reveal-name" id="rname">${S.name}</div>
+      <div class="reveal-line" id="rl2">這個呢？</div>
+      <div class="reveal-actions" id="ract">
+        <button class="reveal-btn primary" onclick="acceptName()">可以</button>
+      </div>
+    </div>`;
+
+  setTimeout(() => { document.getElementById('rl1').classList.add('show'); }, 200);
+  setTimeout(() => { document.getElementById('rname').classList.add('show'); }, 800);
+  setTimeout(() => { document.getElementById('rl2').classList.add('show'); }, 1400);
+  setTimeout(() => { document.getElementById('ract').classList.add('show'); }, 2000);
+}
+
+// ── MAIN ──
+let curQ = null, picked = null;
+
+function startMain() {
+  document.getElementById('naming-screen').classList.add('hidden');
+  document.getElementById('question-screen').classList.remove('hidden');
+  if (!S.pool.length) shufflePool();
+  renderChips();
+  loadQ();
+}
+
+function loadQ() {
+  // occasional time-aware question
+  const h = new Date().getHours();
+  if (S.answered > 3 && Math.random() < 0.12) {
+    if (h >= 12 && h <= 13) curQ = TQ_NOON;
+    else if (h >= 23 || h <= 4) curQ = TQ_NIGHT;
+    else if (h >= 6 && h <= 8) curQ = TQ_MORN;
+    else curQ = null;
+  } else curQ = null;
+
+  if (!curQ) {
+    if (S.poolIdx >= S.pool.length) shufflePool();
+    curQ = S.pool[S.poolIdx];
+  }
+
+  picked = null;
+
+  // eyebrow — occasionally personalised
+  let label = getLabel();
+  if (S.name && S.answered > 0 && Math.random() < 0.2) {
+    const greets = [`${S.name}，`,'嘿，','又是你，','好，'];
+    label = rand(greets);
+  }
+
+  document.getElementById('q-eyebrow').textContent = label;
+  document.getElementById('q-text').textContent = curQ.q;
+  document.getElementById('next-btn').classList.remove('show');
+  document.getElementById('skip-btn').textContent = getSkip(curQ.t);
+  document.getElementById('count-line').textContent =
+    S.answered > 0 ? `已留下 ${S.answered} 個選擇` : '';
+
+  renderCards();
+}
+
+function renderCards() {
+  const area = document.getElementById('cards-area');
+  area.innerHTML = '';
+  ['a','b'].forEach((side, i) => {
+    const card = makeCard(side, curQ[side], i === 0 ? curQ.ca : curQ.cb, i);
+    card.onclick = () => choose(side);
+    area.appendChild(card);
+  });
+}
+
+function choose(side) {
+  if (picked) return;
+  picked = side;
+
+  document.querySelectorAll('.card').forEach(c => {
+    if (c.dataset.side === side) c.classList.add('chosen');
+    else c.classList.add('unchosen');
+  });
+
+  const opt = curQ[side];
+  addChip(opt.zh);
+  S.choices.push({ q: curQ.q, a: opt.zh, tag: curQ.t, ts: Date.now() });
+  S.answered++;
+  S.poolIdx++;
+  save();
+
+  document.getElementById('count-line').textContent = `已留下 ${S.answered} 個選擇`;
+  document.getElementById('skip-btn').style.opacity = '0';
+  document.getElementById('skip-btn').style.pointerEvents = 'none';
+  document.getElementById('next-btn').classList.add('show');
+}
+
+function nextQuestion() {
+  document.getElementById('skip-btn').style.opacity = '';
+  document.getElementById('skip-btn').style.pointerEvents = '';
+  document.getElementById('next-btn').classList.remove('show');
+
+  const area = document.getElementById('cards-area');
+  area.classList.add('fade-out');
+  setTimeout(() => { area.classList.remove('fade-out'); loadQ(); }, 270);
+}
+
+function skipQuestion() {
+  S.skipped++; S.poolIdx++; save();
+  nextQuestion();
+}
+
+// ── BOOT ──
+if (S.phase !== 'naming' && S.phase !== 'main') S.phase = 'naming';
+</script>
+</body>
+</html>
